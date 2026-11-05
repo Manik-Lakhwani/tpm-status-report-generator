@@ -42,7 +42,7 @@ git push -u origin main
 4. Under **Environment Variables**, add:
    - Key: `GEMINI_API_KEY`
    - Value: your Gemini API key (create one in [Google AI Studio](https://aistudio.google.com/app/apikey))
-   - Optional: `GEMINI_MODEL` = `gemini-2.5-flash-lite` (or your project’s exact Flash Lite model ID if Google exposes a different label in your tenant)
+   - Optional: `GEMINI_MODEL` = `gemini-3.5-flash-lite` (or the exact Lite model ID shown in your Google AI Studio project)
 5. Click **Deploy**.
 
 Done. Your app is live at `https://YOUR-PROJECT.vercel.app`.
@@ -109,7 +109,7 @@ As a TPM on a 12-week project I write a status report every Friday. The structur
 
 | Tool | Use |
 |---|---|
-| Gemini 2.5 Flash Lite | Report generation (via the Gemini Generate Content API) |
+| Gemini 3.5 Flash Lite | Report generation (via the Gemini Generate Content API) |
 | Google AI Studio | Prompt design, prototyping and testing |
 
 ---

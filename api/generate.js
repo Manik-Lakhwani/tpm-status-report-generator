@@ -17,7 +17,7 @@ export default async function handler(req, res) {
 
   try {
     const { prompt, messages, model: requestedModel, max_tokens } = req.body || {};
-    const model = requestedModel || process.env.GEMINI_MODEL || 'gemini-2.5-flash-lite';
+    const model = requestedModel || process.env.GEMINI_MODEL || 'gemini-3.5-flash-lite';
 
     const contents = Array.isArray(messages) && messages.length
       ? messages.map((message) => {
