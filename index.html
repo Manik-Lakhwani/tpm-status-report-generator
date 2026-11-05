@@ -126,9 +126,9 @@ R09 Recording consent and privacy requirements not fully resolved (High, severit
       <button class="btn btn-primary" id="gen-btn" onclick="generate()">⚡ Generate Report</button>
       <button class="btn btn-sm" onclick="clearForm()">Reset</button>
     </div>
-    <p class="powered-by">Powered by claude-sonnet-4-6 via the Anthropic API · <a href="https://github.com" target="_blank" style="color:var(--blue)">View on GitHub</a></p>
+    <p class="powered-by">Powered by Gemini 2.5 Flash Lite · <a href="https://github.com" target="_blank" style="color:var(--blue)">View on GitHub</a></p>
 
-    <span class="prompt-toggle" onclick="togglePrompt()">▶ View the prompt sent to Claude</span>
+    <span class="prompt-toggle" onclick="togglePrompt()">▶ View the prompt sent to Gemini</span>
     <pre id="prompt-preview"></pre>
   </div>
 
@@ -136,7 +136,7 @@ R09 Recording consent and privacy requirements not fully resolved (High, severit
   <div id="output-col">
     <div class="info-chip">
       <strong>How to use this tool</strong><br>
-      Fill in the sprint metrics on the left. Click <strong>Generate Report</strong>. Claude produces a one-page leadership status report you can copy and send. Change the audience to get a different tone without re-entering the data.<br><br>
+      Fill in the sprint metrics on the left. Click <strong>Generate Report</strong>. Gemini produces a one-page leadership status report you can copy and send. Change the audience to get a different tone without re-entering the data.<br><br>
       <strong>No API key needed</strong> — the key is stored securely on the server.
     </div>
 
@@ -157,6 +157,7 @@ R09 Recording consent and privacy requirements not fully resolved (High, severit
 
 <script>
 const $=id=>document.getElementById(id);
+const DEFAULT_MODEL = 'gemini-2.5-flash-lite';
 
 function styleSelect(el){
   el.className=''; const v=el.value.toLowerCase();
@@ -224,7 +225,7 @@ FORMAT RULES (follow exactly):
 
 function togglePrompt(){
   const pre=$('prompt-preview'), tog=document.querySelector('.prompt-toggle');
-  if(pre.style.display==='block'){pre.style.display='none';tog.textContent='▶ View the prompt sent to Claude';}
+  if(pre.style.display==='block'){pre.style.display='none';tog.textContent='▶ View the prompt sent to Gemini';}
   else{pre.style.display='block';tog.textContent='▼ Hide prompt';pre.textContent=buildPrompt();}
 }
 
@@ -241,9 +242,9 @@ async function generate(){
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
-        model:'claude-sonnet-4-6',
+        model: DEFAULT_MODEL,
         max_tokens:1000,
-        messages:[{role:'user',content:buildPrompt()}]
+        prompt: buildPrompt()
       })
     });
     if(!res.ok){

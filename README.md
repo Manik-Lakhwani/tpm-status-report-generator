@@ -1,6 +1,6 @@
 # TPM Status Report Generator
 
-An AI-powered single-page web utility for Technical Program Managers. Enter sprint metrics, pick an audience, and get a formatted leadership status report in under 10 seconds — powered by Claude (claude-sonnet-4-6).
+An AI-powered single-page web utility for Technical Program Managers. Enter sprint metrics, pick an audience, and get a formatted leadership status report in under 10 seconds — powered by Gemini Flash Lite.
 
 Built as Part 11 of the PanScience Innovations (PSI) Technical Program Manager take-home assignment.
 
@@ -40,8 +40,9 @@ git push -u origin main
 2. Click **Add New → Project** and import your repository.
 3. Framework preset: **Other** (no framework).
 4. Under **Environment Variables**, add:
-   - Key: `ANTHROPIC_API_KEY`
-   - Value: your Anthropic API key (get one free at [console.anthropic.com](https://console.anthropic.com))
+   - Key: `GEMINI_API_KEY`
+   - Value: your Gemini API key (create one in [Google AI Studio](https://aistudio.google.com/app/apikey))
+   - Optional: `GEMINI_MODEL` = `gemini-2.5-flash-lite` (or your project’s exact Flash Lite model ID if Google exposes a different label in your tenant)
 5. Click **Deploy**.
 
 Done. Your app is live at `https://YOUR-PROJECT.vercel.app`.
@@ -54,19 +55,19 @@ Done. Your app is live at `https://YOUR-PROJECT.vercel.app`.
 
 ```
 Browser (index.html)
-  │  POST /api/generate  { model, messages }
+  │  POST /api/generate  { model, prompt }
   ▼
 Vercel serverless function (api/generate.js)
-  │  reads ANTHROPIC_API_KEY from env
-  │  POST https://api.anthropic.com/v1/messages
+  │  reads GEMINI_API_KEY from env
+  │  POST https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent
   ▼
-Claude (claude-sonnet-4-6)
+Gemini Flash Lite
   │  returns formatted status report
   ▼
 Browser renders the report
 ```
 
-The browser never touches the Anthropic API directly. This avoids CORS restrictions and keeps the API key secure.
+The browser never touches the Gemini API directly. This avoids CORS restrictions and keeps the API key secure.
 
 ---
 
@@ -85,9 +86,9 @@ tpm-status-report-generator/
 
 ## The prompt design
 
-Click **View the prompt sent to Claude** in the app to see the full prompt. Three design principles:
+Click **View the prompt sent to Gemini** in the app to see the full prompt. Three design principles:
 
-**1. Structured input, not freeform.** Specific fields (velocity %, RAG per dimension, risks, decisions) are assembled into a structured brief. Claude summarises provided facts rather than inventing details.
+**1. Structured input, not freeform.** Specific fields (velocity %, RAG per dimension, risks, decisions) are assembled into a structured brief. Gemini summarises provided facts rather than inventing details.
 
 **2. Exact format rules.** Section headers, bullet count and word limits are enforced in the prompt, so the output can be dropped into an email without editing.
 
@@ -108,8 +109,8 @@ As a TPM on a 12-week project I write a status report every Friday. The structur
 
 | Tool | Use |
 |---|---|
-| Claude claude-sonnet-4-6 | Report generation (via Anthropic Messages API) |
-| Claude (claude.ai) | Prompt design, prototyping and testing |
+| Gemini 2.5 Flash Lite | Report generation (via the Gemini Generate Content API) |
+| Google AI Studio | Prompt design, prototyping and testing |
 
 ---
 
