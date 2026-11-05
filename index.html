@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TPM Status Report Generator · PSI</title>
+<style>
+  :root {
+    --navy:#1F3864; --blue:#2E75B6; --accent:#C55A11;
+    --green:#548235; --amber:#BF8F00; --red:#C00000;
+    --bg:#F4F6FA; --card:#FFFFFF; --border:#D0D7E3;
+    --text:#1a1a2e; --muted:#6B7280; --radius:10px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+  header{background:var(--navy);padding:18px 32px;display:flex;align-items:center;gap:14px}
+  header h1{color:#fff;font-size:1.25rem;font-weight:700;letter-spacing:.3px}
+  header span{color:#9BB8D4;font-size:.85rem}
+  .container{max-width:1100px;margin:0 auto;padding:28px 20px;display:grid;grid-template-columns:1fr 1fr;gap:24px}
+  @media(max-width:800px){.container{grid-template-columns:1fr}}
+  .card{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);padding:24px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+  .card h2{font-size:1rem;font-weight:700;color:var(--navy);margin-bottom:16px;padding-bottom:10px;border-bottom:2px solid var(--border)}
+  label{display:block;font-size:.8rem;font-weight:600;color:var(--muted);margin-bottom:4px;margin-top:12px;text-transform:uppercase;letter-spacing:.5px}
+  label:first-of-type{margin-top:0}
+  input,select,textarea{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:6px;font-size:.9rem;font-family:inherit;background:#fafbfd;color:var(--text);transition:border .15s}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue);background:#fff}
+  textarea{resize:vertical;min-height:70px}
+  .rag-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .rag-row select{font-weight:600}
+  select.green{color:var(--green)} select.amber{color:var(--amber)} select.red{color:var(--red)}
+  .btn{padding:10px 18px;border:none;border-radius:6px;font-size:.88rem;font-weight:600;cursor:pointer;transition:opacity .15s}
+  .btn:hover{opacity:.88} .btn:disabled{opacity:.5;cursor:not-allowed}
+  .btn-primary{background:var(--navy);color:#fff}
+  .btn-sm{background:var(--border);color:var(--text);padding:8px 12px;font-size:.8rem}
+  .generate-row{margin-top:18px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  #output-col{display:flex;flex-direction:column;gap:16px}
+  #status-bar{font-size:.85rem;color:var(--muted);min-height:22px;display:flex;align-items:center;gap:8px}
+  .spinner{width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;display:none}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  #report-box{flex:1;background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:0;overflow:hidden;min-height:420px}
+  #report-header{background:var(--navy);color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center}
+  #report-header span{font-size:.9rem;font-weight:600}
+  #report-content{padding:20px;font-size:.88rem;line-height:1.65;color:var(--text);min-height:380px}
+  #report-content:empty::before{content:"Your generated report will appear here.";color:var(--muted);font-style:italic}
+  .copy-btn{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);color:#fff;padding:5px 12px;border-radius:5px;font-size:.78rem;cursor:pointer;font-weight:600}
+  .copy-btn:hover{background:rgba(255,255,255,.28)}
+  .rag-pill{display:inline-block;padding:3px 10px;border-radius:12px;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+  .pill-green{background:#E2EFDA;color:var(--green)} .pill-amber{background:#FFF2CC;color:var(--amber)} .pill-red{background:#FCE4D6;color:var(--red)}
+  .prompt-toggle{font-size:.75rem;color:var(--blue);cursor:pointer;text-decoration:underline;margin-top:8px;display:inline-block}
+  #prompt-preview{display:none;background:#f8f9fb;border:1px solid var(--border);border-radius:6px;padding:12px;font-size:.78rem;white-space:pre-wrap;color:var(--muted);margin-top:8px;max-height:200px;overflow-y:auto}
+  .info-chip{background:#EEF3FA;border:1px solid #C5D5EA;border-radius:6px;padding:10px 14px;font-size:.8rem;color:#2E5A8E;line-height:1.5}
+  .section-sep{border:none;border-top:1px dashed var(--border);margin:10px 0}
+  .powered-by{font-size:.72rem;color:var(--muted);margin-top:6px}
+</style>
+</head>
+<body>
+<header>
+  <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect width="28" height="28" rx="6" fill="#2E75B6"/><path d="M6 8h16M6 14h10M6 20h13" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg>
+  <h1>TPM Status Report Generator</h1>
+  <span>PanScience Innovations · AI Meeting Assistant</span>
+</header>
+
+<div class="container">
+  <!-- INPUT PANEL -->
+  <div class="card">
+    <h2>📋 Sprint Metrics Input</h2>
+
+    <label>Report date</label>
+    <input type="date" id="report-date">
+
+    <label>Sprint number</label>
+    <input type="number" id="sprint-num" value="3" min="1" max="6">
+
+    <label>Sprint goal</label>
+    <input type="text" id="sprint-goal" value="Alpha: all 3 platforms recorded, speakers, summaries, action items">
+
+    <label>Story points committed</label>
+    <input type="number" id="pts-committed" value="80">
+
+    <label>Story points completed</label>
+    <input type="number" id="pts-completed" value="62">
+
+    <label>Open bugs (P1 / P2 / P3)</label>
+    <div class="rag-row">
+      <input type="number" id="bugs-p1" value="0" placeholder="P1">
+      <input type="number" id="bugs-p2" value="4" placeholder="P2">
+      <input type="number" id="bugs-p3" value="9" placeholder="P3">
+    </div>
+
+    <hr class="section-sep">
+
+    <label>Health status per dimension</label>
+    <div class="rag-row">
+      <div><label>Schedule</label><select id="rag-schedule" onchange="styleSelect(this)"><option>Green</option><option selected>Amber</option><option>Red</option></select></div>
+      <div><label>Scope</label><select id="rag-scope" onchange="styleSelect(this)"><option selected>Green</option><option>Amber</option><option>Red</option></select></div>
+      <div><label>Quality</label><select id="rag-quality" onchange="styleSelect(this)"><option selected>Green</option><option>Amber</option><option>Red</option></select></div>
+    </div>
+    <div class="rag-row" style="margin-top:8px">
+      <div><label>Risks</label><select id="rag-risks" onchange="styleSelect(this)"><option>Green</option><option selected>Amber</option><option>Red</option></select></div>
+      <div><label>Resources</label><select id="rag-resources" onchange="styleSelect(this)"><option>Green</option><option selected>Amber</option><option>Red</option></select></div>
+      <div><label>Budget</label><select id="rag-budget" onchange="styleSelect(this)"><option selected>Green</option><option>Amber</option><option>Red</option></select></div>
+    </div>
+
+    <hr class="section-sep">
+
+    <label>Next milestone</label>
+    <input type="text" id="next-milestone" value="M5 Feature complete, end of Week 8">
+
+    <label>Top 2–3 risks (one per line)</label>
+    <textarea id="top-risks">R06 Backend 2 overload on capture work (High, severity 16)
+R07 Scope growth from CEO change request after Sprint 3 (High, severity 15, trending up)
+R09 Recording consent and privacy requirements not fully resolved (High, severity 15)</textarea>
+
+    <label>Decisions / help needed from leadership</label>
+    <textarea id="decisions">1. Approve contract designer extension for 2 more weeks (Sprint 4).
+2. Decision on CEO change request (CRM, multi-language, voice cloning) needed by Friday.</textarea>
+
+    <label>Report audience</label>
+    <select id="audience">
+      <option value="Group CTO">Group CTO (technical, brief)</option>
+      <option value="CEO">CEO (executive, non-technical)</option>
+      <option value="Client sponsor">Client sponsor (progress and dates only)</option>
+    </select>
+
+    <div class="generate-row">
+      <button class="btn btn-primary" id="gen-btn" onclick="generate()">⚡ Generate Report</button>
+      <button class="btn btn-sm" onclick="clearForm()">Reset</button>
+    </div>
+    <p class="powered-by">Powered by claude-sonnet-4-6 via the Anthropic API · <a href="https://github.com" target="_blank" style="color:var(--blue)">View on GitHub</a></p>
+
+    <span class="prompt-toggle" onclick="togglePrompt()">▶ View the prompt sent to Claude</span>
+    <pre id="prompt-preview"></pre>
+  </div>
+
+  <!-- OUTPUT PANEL -->
+  <div id="output-col">
+    <div class="info-chip">
+      <strong>How to use this tool</strong><br>
+      Fill in the sprint metrics on the left. Click <strong>Generate Report</strong>. Claude produces a one-page leadership status report you can copy and send. Change the audience to get a different tone without re-entering the data.<br><br>
+      <strong>No API key needed</strong> — the key is stored securely on the server.
+    </div>
+
+    <div id="status-bar">
+      <div class="spinner" id="spinner"></div>
+      <span id="status-text">Ready.</span>
+    </div>
+
+    <div id="report-box">
+      <div id="report-header">
+        <span id="report-title">Status Report</span>
+        <button class="copy-btn" onclick="copyReport()">Copy</button>
+      </div>
+      <div id="report-content"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+
+function styleSelect(el){
+  el.className=''; const v=el.value.toLowerCase();
+  if(v==='green') el.classList.add('green');
+  else if(v==='amber') el.classList.add('amber');
+  else el.classList.add('red');
+}
+document.querySelectorAll('select[id^="rag-"]').forEach(styleSelect);
+
+function clearForm(){
+  $('sprint-goal').value=''; $('top-risks').value=''; $('decisions').value='';
+  ['pts-committed','pts-completed','bugs-p1','bugs-p2','bugs-p3'].forEach(id=>$(id).value=0);
+  $('report-content').innerHTML=''; $('status-text').textContent='Ready.';
+}
+
+function overallRAG(){
+  const vals=['rag-schedule','rag-scope','rag-quality','rag-risks','rag-resources','rag-budget'].map(id=>$(id).value);
+  if(vals.includes('Red')) return 'Red';
+  if(vals.filter(v=>v==='Amber').length>=2) return 'Amber';
+  return 'Green';
+}
+
+function buildPrompt(){
+  const rag=overallRAG();
+  const pct=Math.round($('pts-completed').value/$('pts-committed').value*100)||0;
+  const audience=$('audience').value;
+  const toneMap={
+    'Group CTO':'Write in a direct technical management tone. Include velocity, burndown, risk details and decisions needed. Keep it concise, under 350 words.',
+    'CEO':'Write in a brief executive tone with no jargon. Focus on delivery confidence, key risks and decisions needed. Keep it under 250 words.',
+    'Client sponsor':'Write in a professional client-facing tone. Focus on progress, next milestone and what is needed from the client. Avoid internal risk details. Under 250 words.'
+  };
+  return `You are a Technical Program Manager at PanScience Innovations (PSI).
+Write a weekly project status report for: ${audience}.
+
+PROJECT: AI Meeting Assistant (12-week MVP, Zoom / Microsoft Teams / Google Meet recording, AI transcription, summaries, action items, search, Slack and Jira integrations)
+
+SPRINT METRICS (snapshot):
+- Report date: ${$('report-date').value||'this Friday'}
+- Sprint ${$('sprint-num').value} of 6
+- Sprint goal: ${$('sprint-goal').value}
+- Points committed: ${$('pts-committed').value} | Points completed: ${$('pts-completed').value} (${pct}%)
+- Open bugs: P1=${$('bugs-p1').value}, P2=${$('bugs-p2').value}, P3=${$('bugs-p3').value}
+
+HEALTH STATUS:
+- Overall: ${rag}
+- Schedule: ${$('rag-schedule').value}  Scope: ${$('rag-scope').value}  Quality: ${$('rag-quality').value}
+- Risks: ${$('rag-risks').value}  Resources: ${$('rag-resources').value}  Budget: ${$('rag-budget').value}
+
+NEXT MILESTONE: ${$('next-milestone').value}
+
+TOP RISKS:
+${$('top-risks').value}
+
+DECISIONS / HELP NEEDED:
+${$('decisions').value}
+
+FORMAT RULES (follow exactly):
+1. Start with: WEEKLY STATUS REPORT | Sprint [N] | [date] | Overall: [RAG]
+2. Use these exact bold section headers: THIS WEEK, NEXT WEEK, TOP RISKS, DECISIONS NEEDED
+3. Use short bullet points (2–4 per section). No sub-bullets.
+4. End with: Prepared by: Technical Program Manager | PanScience Innovations
+5. ${toneMap[audience]}
+6. Do NOT add any preamble, commentary or explanation outside the report itself.`;
+}
+
+function togglePrompt(){
+  const pre=$('prompt-preview'), tog=document.querySelector('.prompt-toggle');
+  if(pre.style.display==='block'){pre.style.display='none';tog.textContent='▶ View the prompt sent to Claude';}
+  else{pre.style.display='block';tog.textContent='▼ Hide prompt';pre.textContent=buildPrompt();}
+}
+
+async function generate(){
+  const btn=$('gen-btn'); btn.disabled=true;
+  $('spinner').style.display='block'; $('status-text').textContent='Generating report…';
+  $('report-content').innerHTML='';
+  const sprintNum=$('sprint-num').value;
+  const dateVal=$('report-date').value||new Date().toISOString().slice(0,10);
+  $('report-title').textContent=`Status Report · Sprint ${sprintNum} · ${dateVal}`;
+
+  try{
+    const res=await fetch('/api/generate',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-6',
+        max_tokens:1000,
+        messages:[{role:'user',content:buildPrompt()}]
+      })
+    });
+    if(!res.ok){
+      const err=await res.json().catch(()=>({error:{message:res.statusText}}));
+      throw new Error(err.error?.message||`HTTP ${res.status}`);
+    }
+    const data=await res.json();
+    const text=data.content?.find(b=>b.type==='text')?.text||'(No response)';
+    colorizeReport(text);
+    $('status-text').textContent='✅ Report generated successfully.';
+  }catch(err){
+    $('status-text').textContent=`❌ Error: ${err.message}`;
+    $('report-content').innerHTML=`<span style="color:var(--red)">Error: ${err.message}</span>`;
+  }finally{
+    btn.disabled=false; $('spinner').style.display='none';
+  }
+}
+
+function colorizeReport(text){
+  const el=$('report-content');
+  // bold **text** and highlight RAG pill
+  let html=text
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+    .replace(/(Overall:\s*)(Green|Amber|Red)/gi,(m,pre,rag)=>{
+      const cls={'green':'pill-green','amber':'pill-amber','red':'pill-red'}[rag.toLowerCase()]||'';
+      return `${pre}<span class="rag-pill ${cls}">${rag}</span>`;
+    })
+    .replace(/\n/g,'<br>');
+  el.innerHTML=html;
+}
+
+function copyReport(){
+  const txt=$('report-content').innerText;
+  if(!txt.trim()){alert('Nothing to copy yet.');return;}
+  navigator.clipboard.writeText(txt).then(()=>{
+    const btn=document.querySelector('.copy-btn');
+    btn.textContent='Copied!'; setTimeout(()=>btn.textContent='Copy',2000);
+  });
+}
+
+$('report-date').value=new Date().toISOString().slice(0,10);
+</script>
+</body>
+</html>
